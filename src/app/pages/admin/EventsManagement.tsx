@@ -338,7 +338,7 @@ export default function EventsManagement() {
 
       {/* Modal Crear/Editar */}
       {showModal && (
-        <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-[var(--app-border)]">
               <h3 className="text-xl font-bold text-[var(--app-text-primary)]">
@@ -505,7 +505,7 @@ export default function EventsManagement() {
 
       {/* Modal Gráfica IA */}
       {showChartModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-2xl w-full">
             <div className="p-6 border-b border-[var(--app-border)] flex justify-between items-center">
               <h3 className="text-xl font-bold text-[var(--app-text-primary)] flex items-center gap-2">
@@ -545,7 +545,7 @@ export default function EventsManagement() {
 
       {/* Modal Eliminar */}
       {showDeleteModal && deletingEvento && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">

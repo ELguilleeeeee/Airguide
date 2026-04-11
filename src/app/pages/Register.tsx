@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import MensajeRegistro from '../components/MensajeRegistro';
-import { Mail, Lock, User, CreditCard, MapPin, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, CreditCard, MapPin, ArrowLeft } from 'lucide-react';
 
 export default function Register() {
   const [formData, setFormData] = useState({

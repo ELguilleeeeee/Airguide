@@ -46,7 +46,6 @@ export function useProfesores(autoFetch = true) {
       setProfesores(data);
     } catch (err: any) {
       setError(err.message);
-      console.error('Error fetching profesores:', err);
     } finally {
       setLoading(false);
     }

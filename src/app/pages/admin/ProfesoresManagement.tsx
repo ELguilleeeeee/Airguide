@@ -12,6 +12,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { useProfesores, useSalones, useUsuarios } from '../../hooks';
+import { toast } from 'sonner';
 
 export default function ProfesoresManagement() {
   const { 
@@ -146,7 +147,7 @@ export default function ProfesoresManagement() {
       setShowDeleteModal(false);
       setDeletingProfesor(null);
     } catch (error: any) {
-      alert(`Error: ${error.message}`);
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }

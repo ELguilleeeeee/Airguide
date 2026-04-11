@@ -4,6 +4,7 @@ import { LayoutDashboard, Building2, Calendar, BarChart3, Users, Moon, Sun, Sett
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAnalytics, useUsuarios } from '../../hooks';
+import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -58,9 +59,9 @@ export default function AdminDashboard() {
     }
     try {
       await validarUsuario(id, estado);
-      alert(`Usuario ${estado === 'activo' ? 'aprobado' : 'rechazado'} exitosamente`);
+      toast.success(`Usuario ${estado === 'activo' ? 'aprobado' : 'rechazado'} exitosamente`);
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

@@ -2,6 +2,11 @@
   "name": "@airguide/client",
   "private": true,
   "version": "0.0.1",
+  "homepage": "https://airguide-lac.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luiss811/Airguide.git"
+  },
   "type": "module",
   "scripts": {
     "build": "vite build",

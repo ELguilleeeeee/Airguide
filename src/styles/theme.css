@@ -45,6 +45,7 @@
   --app-bg: #f9fafb;
   --app-header-bg: #ffffff;
   --app-sidebar-bg: #ffffff;
+  --app-card-bg: #ffffff;
   --app-text-primary: #111827;
   --app-text-secondary: #6b7280;
   --app-border: #e5e7eb;
@@ -97,6 +98,7 @@
   --app-bg: #111827;
   --app-header-bg: #1f2937;
   --app-sidebar-bg: #1f2937;
+  --app-card-bg: #1f2937;
   --app-text-primary: #f9fafb;
   --app-text-secondary: #9ca3af;
   --app-border: #374151;

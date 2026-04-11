@@ -2,10 +2,7 @@ import { useNavigate } from 'react-router';
 import {
   Building2,
   Calendar,
-  BarChart3,
   Users,
-  MapPin,
-  Settings,
   Route,
   UserCheck,
   UserX,
@@ -13,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAnalytics, useUsuarios } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();
@@ -31,9 +29,9 @@ export default function DashboardAdmin() {
     }
     try {
       await validarUsuario(id, estado);
-      alert(`Usuario ${estado === 'activo' ? 'aprobado' : 'rechazado'} exitosamente`);
+      toast.success(`Usuario ${estado === 'activo' ? 'aprobado' : 'rechazado'} exitosamente`);
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

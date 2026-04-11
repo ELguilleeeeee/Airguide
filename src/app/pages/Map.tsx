@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-    MapPin, Navigation, Calendar, Building2, Search,
-    LogIn, UserCog, Users, LogOut, Route as RouteIcon,
-    X, LocateFixed
-} from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { MapPin, Navigation, Building2, Route as RouteIcon, X, LocateFixed } from 'lucide-react';
 import logoUTEQ from '../../styles/images/letras_uteq_azul2025.png';
 import { useEdificios, useEventos, useProfesores } from '../hooks';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SearchBar } from '../components/SearchBar';
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer, Polyline } from '@react-google-maps/api';
+import { toast } from 'sonner';
 
 const center = { lat: 20.656333, lng: -100.404745 };
 const containerStyle = { width: '100%', height: '100%' };
@@ -56,7 +53,7 @@ export default function Map() {
     }>({ startLine: null, endLine: null });
     const [customRouteDetails, setCustomRouteDetails] = useState<google.maps.LatLngLiteral[] | null>(null);
 
-    // 2. LÓGICA DE GEOLOCALIZACIÓN
+    // LÓGICA DE GEOLOCALIZACIÓN
     useEffect(() => {
         if (!navigator.geolocation) return;
         watchIdRef.current = navigator.geolocation.watchPosition(
@@ -85,7 +82,7 @@ export default function Map() {
         setMap(null);
     }, []);
 
-    // 4. DIBUJAR CAPA GEOJSON
+    // DIBUJAR CAPA GEOJSON
     useEffect(() => {
         if (map && geojsonData) {
             map.data.forEach((feature) => map.data.remove(feature));
@@ -104,7 +101,7 @@ export default function Map() {
         }
     }, [map, geojsonData]);
 
-    // 5. FILTROS
+    // FILTROS
     const canViewProfesores = user && ['alumno', 'admin', 'rector'].includes(user.rol);
     const profesoresFiltrados = canViewProfesores ? profesores.filter(p =>
         p.usuario?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,16 +116,20 @@ export default function Map() {
         return matchesEdificio || (searchTerm !== '' && hasMatchingProfesor);
     });
 
-    // 6. CÁLCULO DE RUTA
+    // CÁLCULO DE RUTA
     const calculateRoute = async () => {
         if (!routeOrigin || !routeDestination) {
-            return alert("Por favor selecciona un origen y un destino.");
+            toast.error("Por favor selecciona un origen y un destino.");
+            return;
         }
 
         let originCoords: google.maps.LatLngLiteral;
 
         if (routeOrigin === 'user') {
-            if (!userLocation) return alert("Esperando señal GPS... asegúrate de dar permisos de ubicación.");
+            if (!userLocation) {
+                toast.error("Esperando señal GPS... asegúrate de dar permisos de ubicación.");
+                return;
+            }
             originCoords = userLocation;
         } else {
             const originB = edificios.find(e => e.id_edificio === routeOrigin);
@@ -172,7 +173,6 @@ export default function Map() {
                     setCustomRouteDetails(null);
                 }
             } catch (err) {
-                console.error("Error fetching custom route", err);
                 setCustomRouteDetails(null);
             }
         } else {
@@ -182,10 +182,29 @@ export default function Map() {
         if (!window.google) return;
         const directionsService = new window.google.maps.DirectionsService();
 
+        let googleOrigin = originCoords;
+        let googleDestination = destinationCoords;
+        let isCustomPathAtOrigin = false;
+
+        if (customPath && customPath.length > 0) {
+            // Se calcula si el customPath comienza más cerca del Origen o del Destino
+            const distToOrigin = Math.pow(customPath[0].lat - originCoords.lat, 2) + Math.pow(customPath[0].lng - originCoords.lng, 2);
+            const distToDest = Math.pow(customPath[customPath.length - 1].lat - destinationCoords.lat, 2) + Math.pow(customPath[customPath.length - 1].lng - destinationCoords.lng, 2);
+
+            if (distToOrigin < distToDest) {
+                // El custom path está al origen (Ej. Sales de PIDET)
+                isCustomPathAtOrigin = true;
+                googleOrigin = customPath[customPath.length - 1]; // Iniciar en el final de nuestro tramo manual hacia afuera
+            } else {
+                // El custom path está al destino (Ej. Vas hacia PIDET)
+                googleDestination = customPath[0]; // Terminar en el inicio de nuestro tramo manual interno
+            }
+        }
+
         directionsService.route(
             {
-                origin: originCoords,
-                destination: destinationCoords,
+                origin: googleOrigin,
+                destination: googleDestination,
                 travelMode: window.google.maps.TravelMode.WALKING
             },
             (result, status) => {
@@ -196,11 +215,11 @@ export default function Map() {
                     
                     // AUTO-STITCH LAST MILE GAPS
                     setAutoStitchLines({
-                        startLine: [
+                        startLine: isCustomPathAtOrigin ? null : [
                             originCoords,
                             { lat: leg.start_location.lat(), lng: leg.start_location.lng() }
                         ],
-                        endLine: customPath ? null : [
+                        endLine: (!isCustomPathAtOrigin && customPath) ? null : [
                             { lat: leg.end_location.lat(), lng: leg.end_location.lng() },
                             destinationCoords
                         ]
@@ -208,7 +227,7 @@ export default function Map() {
 
                     setShowRoutePanel(false);
                 } else {
-                    alert("Google no encontró una ruta peatonal válida entre estos puntos.");
+                    toast.error("Google Maps no encontró una ruta peatonal válida entre estos puntos.");
                 }
             }
         );
@@ -229,13 +248,20 @@ export default function Map() {
         <div className="h-screen flex flex-col">
             <header className="bg-[var(--app-header-bg)] border-b border-[var(--app-border)] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <img src={logoUTEQ} alt="Logo" className="h-8" />
+                    <img src={logoUTEQ} alt="Logo UTEQ" className="h-8" />
                     <h1 className="text-xl font-semibold text-[var(--app-text-primary)]">AirGuide</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    {user ? (
+                    {user?.rol === "alumno" && (
                         <div className="flex items-center gap-4 px-3 py-2 bg-[var(--app-hover)] rounded-lg">
                             <span className="text-sm text-[var(--app-text-primary)]">{user.nombre}</span>
+                            <button onClick={() => { logout(); navigate('/login'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Cerrar Sesión</button>
+                        </div>
+                    )}
+                    {user?.rol === "admin" ? (
+                        <div className="flex items-center gap-4 px-3 py-2 bg-[var(--app-hover)] rounded-lg">
+                            <span className="text-sm text-[var(--app-text-primary)]">{user.nombre}</span>
+                            <button onClick={() => { navigate('/dashboard'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Dashboard</button>
                             <button onClick={() => { logout(); navigate('/login'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Cerrar Sesión</button>
                         </div>
                     ) : (
@@ -297,8 +323,8 @@ export default function Map() {
                                 position={{ lat: Number(edificio.latitud), lng: Number(edificio.longitud) }}
                                 icon={{
                                     url: getIcon('#3B82F6', '#1E40AF'),
-                                    scaledSize: new window.google.maps.Size(32, 42),
-                                    anchor: new window.google.maps.Point(16, 42),
+                                    scaledSize: new window.google.maps.Size(30, 40),
+                                    anchor: new window.google.maps.Point(10, 35),
                                 }}
                                 onClick={() => {
                                     if (map) map.panTo({ lat: Number(edificio.latitud), lng: Number(edificio.longitud) });

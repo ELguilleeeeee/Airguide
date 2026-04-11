@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { router } from './routes';
+import { Toaster } from 'sonner';
 import '../styles/leaflet.css';
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <RouterProvider router={router} />
+        <Toaster position="top-right" richColors />
       </AuthProvider>
     </ThemeProvider>
   );
