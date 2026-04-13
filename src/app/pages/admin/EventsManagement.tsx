@@ -16,6 +16,16 @@ export default function EventsManagement() {
   const [learningCurve, setLearningCurve] = useState<any[]>([]);
   const [editingEvento, setEditingEvento] = useState<any>(null);
   const [deletingEvento, setDeletingEvento] = useState<any>(null);
+
+  const formatDatetimeForInput = (isoString: string) => {
+    if (!isoString) return '';
+    try {
+        const d = new Date(isoString);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+    } catch { return ''; }
+  };
+
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -97,8 +107,8 @@ export default function EventsManagement() {
     setFormData({
       nombre: evento.nombre,
       descripcion: evento.descripcion || '',
-      fecha_inicio: evento.fecha_inicio.split('T')[0],
-      fecha_fin: evento.fecha_fin.split('T')[0],
+      fecha_inicio: formatDatetimeForInput(evento.fecha_inicio),
+      fecha_fin: formatDatetimeForInput(evento.fecha_fin),
       id_edificio: evento.id_edificio.toString(),
       id_creador: evento.id_creador ? evento.id_creador.toString() : '',
       prioridad_evento: evento.prioridad_evento || 3,
@@ -161,9 +171,9 @@ export default function EventsManagement() {
   };
 
   return (
-    <div>
+    <div className='min-h-screen bg-[var(--app-background)] p-6'>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-[var(--app-text-primary)]">
             Gestión de Eventos
@@ -208,7 +218,7 @@ export default function EventsManagement() {
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg overflow-hidden">
+      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg overflow-x-auto">
         <table className="w-full">
           <thead className="bg-[var(--app-hover)] border-b border-[var(--app-border)]">
             <tr>
@@ -275,17 +285,15 @@ export default function EventsManagement() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-[var(--app-text-primary)]">
-                      {new Date(evento.fecha_inicio).toLocaleDateString('es-MX', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
+                      {new Date(evento.fecha_inicio).toLocaleString('es-MX', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
                       })}
                     </div>
                     <div className="text-xs text-[var(--app-text-secondary)]">
-                      hasta {new Date(evento.fecha_fin).toLocaleDateString('es-MX', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
+                      hasta {new Date(evento.fecha_fin).toLocaleString('es-MX', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
                       })}
                     </div>
                   </td>

@@ -1,19 +1,12 @@
 import { useState } from 'react';
-import {
-  Users,
-  Search,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Shield,
-  User
-} from 'lucide-react';
+import { Users, Search, CheckCircle, XCircle, Clock, Shield, User } from 'lucide-react';
 import { useUsuarios } from '../../hooks';
 import { toast } from 'sonner';
 
 export default function UsuariosManagement() {
   const { usuarios, loading, validarUsuario } = useUsuarios();
   const [searchTerm, setSearchTerm] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, id: number | null, accion: 'activo' | 'rechazado' | null }>({ isOpen: false, id: null, accion: null });
 
   const usuariosFiltrados = usuarios.filter(u =>
     u.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,7 +59,7 @@ export default function UsuariosManagement() {
       </div>
 
       <div className="bg-[var(--app-card-bg)] rounded-xl shadow-sm border border-[var(--app-border)] overflow-hidden">
-        {/* Header Controls */}
+        {/* Barra de busqueda */}
         <div className="p-4 border-b border-[var(--app-border)] flex gap-4 bg-[var(--app-hover)]">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--app-text-secondary)]" />
@@ -89,7 +82,7 @@ export default function UsuariosManagement() {
                   Usuario
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-[var(--app-text-secondary)] uppercase tracking-wider">
-                  Matrícula/Nómina
+                  Matrícula
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-[var(--app-text-secondary)] uppercase tracking-wider">
                   Rol
@@ -153,14 +146,14 @@ export default function UsuariosManagement() {
                       {usuario.estado === 'pendiente' && (
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => handleValidar(usuario.id_usuario, 'activo')}
+                            onClick={() => setConfirmModal({ isOpen: true, id: usuario.id_usuario, accion: 'activo' })}
                             className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-950 rounded-lg transition-colors"
                             title="Aprobar"
                           >
                             <CheckCircle className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleValidar(usuario.id_usuario, 'rechazado')}
+                            onClick={() => setConfirmModal({ isOpen: true, id: usuario.id_usuario, accion: 'rechazado' })}
                             className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
                             title="Rechazar"
                           >
@@ -194,6 +187,37 @@ export default function UsuariosManagement() {
           </table>
         </div>
       </div>
+
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-[var(--app-card-bg)] rounded-xl shadow-xl w-full max-w-sm p-6 border border-[var(--app-border)]">
+            <h3 className="text-lg font-bold text-[var(--app-text-primary)] mb-2">Confirmar acción</h3>
+            <p className="text-[var(--app-text-secondary)] mb-6">
+              ¿Estás seguro de que deseas {confirmModal.accion === 'activo' ? 'aprobar' : 'rechazar'} a este usuario?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, id: null, accion: null })}
+                className="px-4 py-2 text-sm font-medium text-[var(--app-text-secondary)] hover:bg-[var(--app-hover)] rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.id && confirmModal.accion) {
+                    handleValidar(confirmModal.id, confirmModal.accion);
+                    setConfirmModal({ isOpen: false, id: null, accion: null });
+                  }
+                }}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${confirmModal.accion === 'activo' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                  }`}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -122,7 +122,7 @@ export default function Register() {
                     border: '1px solid var(--app-border)',
                     color: 'var(--app-text-primary)'
                   }}
-                  placeholder="tu@universidad.edu"
+                  placeholder="ejemplo@uteq.edu.mx"
                 />
               </div>
             </div>

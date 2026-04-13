@@ -1,27 +1,31 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, DoorOpen, Building2, Search } from 'lucide-react';
-import { useSalones, useEdificios } from '../../hooks';
+import { Plus, Edit, Trash2, DoorOpen, Building2, Search, User } from 'lucide-react';
+import { useCubiculos, useEdificios, useProfesores } from '../../hooks';
 import { toast } from 'sonner';
 
-export default function SalonesManagement() {
-    const { salones, loading, createSalon, updateSalon, deleteSalon, fetchSalones } = useSalones();
+export default function CubiculosManagement() {
+    const { cubiculos, loading, createCubiculo, updateCubiculo, deleteCubiculo, fetchCubiculos } = useCubiculos();
     const { edificios } = useEdificios();
+    const { profesores } = useProfesores();
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [editingSalon, setEditingSalon] = useState<any>(null);
-    const [deletingSalon, setDeletingSalon] = useState<any>(null);
+    const [editingCubiculo, setEditingCubiculo] = useState<any>(null);
+    const [deletingCubiculo, setDeletingCubiculo] = useState<any>(null);
     const [formData, setFormData] = useState({
-        nombre: '',
-        tipo: 'aula' as 'aula' | 'laboratorio' | 'auditorio' | 'oficina',
-        id_edificio: '',
+        numero: '',
         piso: '',
+        id_edificio: '',
+        id_profesor: '',
+        referencia: '',
         activo: true
     });
 
-    const salonesFiltrados = salones.filter(s =>
-        s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.edificio?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    const cubiculosFiltrados = cubiculos.filter(c =>
+        (c.numero || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.edificio?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.profesor?.usuario?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,84 +33,77 @@ export default function SalonesManagement() {
 
         try {
             const data = {
-                nombre: formData.nombre,
-                tipo: formData.tipo,
-                id_edificio: parseInt(formData.id_edificio),
+                numero: formData.numero,
                 piso: parseInt(formData.piso),
+                id_edificio: parseInt(formData.id_edificio),
+                id_profesor: parseInt(formData.id_profesor),
+                referencia: formData.referencia,
                 activo: formData.activo
             };
 
-            if (editingSalon) {
-                await updateSalon(editingSalon.id_salon, data);
-                toast.success('Salón actualizado correctamente');
+            if (editingCubiculo) {
+                await updateCubiculo(editingCubiculo.id_cubiculo, data);
+                toast.success('Cubículo actualizado correctamente');
             } else {
-                await createSalon(data);
-                toast.success('Salón creado correctamente');
+                await createCubiculo(data);
+                toast.success('Cubículo creado correctamente');
             }
 
             setShowModal(false);
             resetForm();
-            fetchSalones();
+            fetchCubiculos();
         } catch (error: any) {
-            toast.error(error.message || 'Error al guardar salón');
+            toast.error(error.message || 'Error al guardar cubículo');
         }
     };
 
-    const handleEdit = (salon: any) => {
-        setEditingSalon(salon);
+    const handleEdit = (cubiculo: any) => {
+        setEditingCubiculo(cubiculo);
         setFormData({
-            nombre: salon.nombre,
-            tipo: salon.tipo,
-            id_edificio: salon.id_edificio.toString(),
-            piso: salon.piso.toString(),
-            activo: salon.activo
+            numero: cubiculo.numero,
+            piso: cubiculo.piso.toString(),
+            id_edificio: cubiculo.id_edificio.toString(),
+            id_profesor: cubiculo.id_profesor.toString(),
+            referencia: cubiculo.referencia || '',
+            activo: cubiculo.activo
         });
         setShowModal(true);
     };
 
-    const handleDeleteClick = (salon: any) => {
-        setDeletingSalon(salon);
+    const handleDeleteClick = (cubiculo: any) => {
+        setDeletingCubiculo(cubiculo);
         setShowDeleteModal(true);
     };
 
     const handleDeleteConfirm = async () => {
-        if (!deletingSalon) return;
+        if (!deletingCubiculo) return;
 
         try {
-            await deleteSalon(deletingSalon.id_salon);
-            toast.success('Salón eliminado correctamente');
+            await deleteCubiculo(deletingCubiculo.id_cubiculo);
+            toast.success('Cubículo eliminado correctamente');
             setShowDeleteModal(false);
-            setDeletingSalon(null);
-            fetchSalones();
+            setDeletingCubiculo(null);
+            fetchCubiculos();
         } catch (error: any) {
-            toast.error(error.message || 'Error al eliminar salón');
+            toast.error(error.message || 'Error al eliminar cubículo');
         }
     };
 
     const resetForm = () => {
         setFormData({
-            nombre: '',
-            tipo: 'aula',
-            id_edificio: '',
+            numero: '',
             piso: '',
+            id_edificio: '',
+            id_profesor: '',
+            referencia: '',
             activo: true
         });
-        setEditingSalon(null);
+        setEditingCubiculo(null);
     };
 
     const handleCloseModal = () => {
         setShowModal(false);
         resetForm();
-    };
-
-    const getTipoColor = (tipo: string) => {
-        const colores: Record<string, string> = {
-            aula: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
-            laboratorio: 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
-            auditorio: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
-            oficina: 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-        };
-        return colores[tipo] || colores.aula;
     };
 
     return (
@@ -115,10 +112,10 @@ export default function SalonesManagement() {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[var(--app-text-primary)]">
-                        Gestión de Salones
+                        Gestión de Cubículos
                     </h2>
                     <p className="text-sm text-[var(--app-text-secondary)] mt-1">
-                        Administra los salones dentro de los edificios
+                        Administra los cubículos designados a profesores
                     </p>
                 </div>
                 <button
@@ -126,7 +123,7 @@ export default function SalonesManagement() {
                     className="flex items-center gap-2 px-4 py-2 bg-[var(--app-blue)] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                     <Plus className="w-4 h-4" />
-                    Nuevo Salón
+                    Nuevo Cubículo
                 </button>
             </div>
 
@@ -136,50 +133,11 @@ export default function SalonesManagement() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--app-text-secondary)]" />
                     <input
                         type="text"
-                        placeholder="Buscar salones..."
+                        placeholder="Buscar por número, edificio o profesor..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] placeholder:text-[var(--app-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
                     />
-                </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-[var(--app-text-secondary)]">Total Salones</p>
-                            <p className="text-2xl font-bold text-[var(--app-text-primary)]">{salones.length}</p>
-                        </div>
-                        <DoorOpen className="w-8 h-8 text-[var(--app-blue)] opacity-50" />
-                    </div>
-                </div>
-                <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-[var(--app-text-secondary)]">Aulas</p>
-                            <p className="text-2xl font-bold text-[var(--app-text-primary)]">
-                                {salones.filter(s => s.tipo === 'aula').length}
-                            </p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300">A</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-[var(--app-text-secondary)]">Laboratorios</p>
-                            <p className="text-2xl font-bold text-[var(--app-text-primary)]">
-                                {salones.filter(s => s.tipo === 'laboratorio').length}
-                            </p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                            <span className="text-xs font-bold text-purple-700 dark:text-purple-300">L</span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -189,13 +147,13 @@ export default function SalonesManagement() {
                     <thead className="bg-[var(--app-hover)] border-b border-[var(--app-border)]">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
-                                Salón
+                                Cubículo
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
+                                Profesor Asociado
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
                                 Edificio
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
-                                Tipo
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
                                 Piso
@@ -211,22 +169,22 @@ export default function SalonesManagement() {
                     <tbody className="divide-y divide-[var(--app-border)]">
                         {loading ? (
                             <tr>
-                                <td colSpan={7} className="px-6 py-8 text-center">
+                                <td colSpan={6} className="px-6 py-8 text-center">
                                     <div className="flex items-center justify-center gap-3">
                                         <div className="w-5 h-5 border-2 border-[var(--app-blue)] border-t-transparent rounded-full animate-spin" />
                                         <span className="text-sm text-[var(--app-text-secondary)]">Cargando...</span>
                                     </div>
                                 </td>
                             </tr>
-                        ) : salonesFiltrados.length === 0 ? (
+                        ) : cubiculosFiltrados.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="px-6 py-8 text-center text-sm text-[var(--app-text-secondary)]">
-                                    No se encontraron salones
+                                <td colSpan={6} className="px-6 py-8 text-center text-sm text-[var(--app-text-secondary)]">
+                                    No se encontraron cubículos
                                 </td>
                             </tr>
                         ) : (
-                            salonesFiltrados.map((salon) => (
-                                <tr key={salon.id_salon} className="hover:bg-[var(--app-hover)]">
+                            cubiculosFiltrados.map((cubiculo) => (
+                                <tr key={cubiculo.id_cubiculo} className="hover:bg-[var(--app-hover)]">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-shrink-0">
@@ -234,48 +192,51 @@ export default function SalonesManagement() {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-medium text-[var(--app-text-primary)]">
-                                                    {salon.nombre}
+                                                    Cubículo {cubiculo.numero}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <Building2 className="w-4 h-4 text-[var(--app-blue)]" />
+                                            <User className="w-4 h-4 text-[var(--app-text-secondary)]" />
                                             <span className="text-sm text-[var(--app-text-primary)]">
-                                                {salon.edificio?.nombre || 'Sin edificio'}
+                                                {cubiculo.profesor?.usuario?.nombre || 'Sin profesor'}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTipoColor(salon.tipo)}`}>
-                                            {salon.tipo}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="w-4 h-4 text-[var(--app-blue)]" />
+                                            <span className="text-sm text-[var(--app-text-primary)]">
+                                                {cubiculo.edificio?.nombre || 'Sin edificio'}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="text-sm text-[var(--app-text-primary)]">
-                                            Piso {salon.piso}
+                                            Piso {cubiculo.piso}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${salon.activo
+                                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${cubiculo.activo
                                             ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
                                             : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
                                             }`}>
-                                            {salon.activo ? 'Activo' : 'Inactivo'}
+                                            {cubiculo.activo ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right text-sm font-medium">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
-                                                onClick={() => handleEdit(salon)}
+                                                onClick={() => handleEdit(cubiculo)}
                                                 className="p-2 text-[var(--app-blue)] hover:bg-[var(--app-hover)] rounded-lg transition-colors"
                                                 title="Editar"
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => handleDeleteClick(salon)}
+                                                onClick={() => handleDeleteClick(cubiculo)}
                                                 className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
                                                 title="Eliminar"
                                             >
@@ -296,28 +257,63 @@ export default function SalonesManagement() {
                     <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-[var(--app-border)]">
                             <h3 className="text-xl font-bold text-[var(--app-text-primary)]">
-                                {editingSalon ? 'Editar Salón' : 'Nuevo Salón'}
+                                {editingCubiculo ? 'Editar Cubículo' : 'Nuevo Cubículo'}
                             </h3>
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
-                                    Nombre del Salón *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
-                                    placeholder="Ej: Aula 101"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
+                                        Número de Cubículo
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.numero}
+                                        onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
+                                        placeholder="Ej: C-104"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
+                                        Piso
+                                    </label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        value={formData.piso}
+                                        onChange={(e) => setFormData({ ...formData, piso: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
+                                        placeholder="1"
+                                    />
+                                </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
-                                    Edificio *
+                                    Profesor Asignado
+                                </label>
+                                <select
+                                    required
+                                    value={formData.id_profesor}
+                                    onChange={(e) => setFormData({ ...formData, id_profesor: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
+                                >
+                                    <option value="">Selecciona un profesor...</option>
+                                    {profesores.map((profesor) => (
+                                        <option key={profesor.id_profesor} value={profesor.id_profesor}>
+                                            {profesor.usuario.nombre} - {profesor.departamento}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
+                                    Edificio
                                 </label>
                                 <select
                                     required
@@ -334,37 +330,17 @@ export default function SalonesManagement() {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
-                                        Tipo *
-                                    </label>
-                                    <select
-                                        value={formData.tipo}
-                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
-                                        className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
-                                    >
-                                        <option value="aula">Aula</option>
-                                        <option value="laboratorio">Laboratorio</option>
-                                        <option value="auditorio">Auditorio</option>
-                                        <option value="oficina">Oficina</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
-                                        Piso *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        value={formData.piso}
-                                        onChange={(e) => setFormData({ ...formData, piso: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
-                                        placeholder="1"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
+                                    Referencia u Observaciones
+                                </label>
+                                <textarea
+                                    value={formData.referencia}
+                                    onChange={(e) => setFormData({ ...formData, referencia: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
+                                    placeholder="Maestro de Arquitectura de Software, horario 15:00 - 20:00, etc."
+                                    rows={2}
+                                />
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -376,7 +352,7 @@ export default function SalonesManagement() {
                                     className="w-4 h-4 text-[var(--app-blue)] rounded"
                                 />
                                 <label htmlFor="activo" className="text-sm text-[var(--app-text-primary)]">
-                                    Salón activo
+                                    Cubículo activo
                                 </label>
                             </div>
 
@@ -392,7 +368,7 @@ export default function SalonesManagement() {
                                     type="submit"
                                     className="flex-1 px-4 py-2 bg-[var(--app-blue)] text-white rounded-lg hover:opacity-90 transition-opacity"
                                 >
-                                    {editingSalon ? 'Actualizar' : 'Crear'}
+                                    {editingCubiculo ? 'Actualizar' : 'Crear'}
                                 </button>
                             </div>
                         </form>
@@ -401,7 +377,7 @@ export default function SalonesManagement() {
             )}
 
             {/* Modal Eliminar */}
-            {showDeleteModal && deletingSalon && (
+            {showDeleteModal && deletingCubiculo && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-md w-full">
                         <div className="p-6">
@@ -411,7 +387,7 @@ export default function SalonesManagement() {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold text-[var(--app-text-primary)]">
-                                        Eliminar Salón
+                                        Eliminar Cubículo
                                     </h3>
                                     <p className="text-sm text-[var(--app-text-secondary)]">
                                         Esta acción no se puede deshacer
@@ -420,14 +396,14 @@ export default function SalonesManagement() {
                             </div>
 
                             <p className="text-sm text-[var(--app-text-primary)] mb-6">
-                                ¿Estás seguro de que deseas eliminar el salón <strong>"{deletingSalon.nombre}"</strong>?
+                                ¿Estás seguro de que deseas eliminar el cubículo <strong>{deletingCubiculo.numero}</strong>?
                             </p>
 
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => {
                                         setShowDeleteModal(false);
-                                        setDeletingSalon(null);
+                                        setDeletingCubiculo(null);
                                     }}
                                     className="flex-1 px-4 py-2 bg-[var(--app-hover)] text-[var(--app-text-primary)] rounded-lg hover:bg-opacity-80 transition-all"
                                 >

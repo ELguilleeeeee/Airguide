@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import { ProtectedMap } from './components/ProtectedMap';
 import { ProtectedAdminLayout } from './components/ProtectedAdminLayout';
-import { RedirectToHome } from './components/RedirectToHome';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Map';
@@ -13,6 +12,9 @@ import Analytics from './pages/admin/Analytics';
 import ProfesoresManagement from './pages/admin/ProfesoresManagement';
 import UsuariosManagement from './pages/admin/UsuariosManagement';
 import VerifyTwoFactor from './pages/VerifyTwoFactor';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import CubiculosManagement from './pages/admin/CubiculosManagement';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
     path:'verify-2fa',
     Component: VerifyTwoFactor
   },
+  {
+    path: 'forgot-password',
+    Component: ForgotPassword
+  },
+  {
+    path: 'reset-password',
+    Component: ResetPassword
+  },
   // Rutas de administrador
   {
     path: '/admin',
@@ -55,6 +65,9 @@ export const router = createBrowserRouter([
       {
         path: 'salones',
         Component: SalonesManagement,
+      },{
+        path: 'cubiculos',
+        Component: CubiculosManagement,
       },
       {
         path: 'profesores',

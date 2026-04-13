@@ -1,53 +1,65 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { Mail, Lock, MapPin, ArrowLeft } from 'lucide-react';
+import { Mail, MapPin, ArrowLeft } from 'lucide-react';
 
-export default function Login() {
+export default function ForgotPassword() {
   const [correo, setCorreo] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    if (!password || !correo) {
-      setError('Por favor, completa todos los campos');
+    if (!correo) {
+      setError('Por favor, ingresa tu correo electrónico');
       return;
     }
 
     setLoading(true);
-    const result = await login(correo, password);
 
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo }),
+      });
 
-    if (!result.success) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar código');
+      }
+
+      setSuccess(data.message);
+
+      // Pass the email to the reset password page
+      setTimeout(() => {
+        navigate('/reset-password', { state: { correo } });
+      }, 2000);
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
       setLoading(false);
-      setError(result.error);
-      return;
     }
-
-    if (result.requiresTwoFactor === true) {
-      setLoading(false);
-      navigate('/verify-2fa', { state: { correo: result.correo } });
-    }
-    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--app-bg)' }}>
       <div className="absolute top-4 left-4">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/login')}
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-[var(--app-hover)] transition-colors"
           style={{ color: 'var(--app-text-secondary)' }}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Volver al mapa</span>
+          <span className="text-sm">Volver</span>
         </button>
       </div>
 
@@ -63,10 +75,14 @@ export default function Login() {
               <MapPin className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text-primary)' }}>AirGuide</h1>
-            <p className="mt-2" style={{ color: 'var(--app-text-secondary)' }}>Iniciar Sesión</p>
+            <p className="mt-2" style={{ color: 'var(--app-text-secondary)' }}>Recuperar Contraseña</p>
           </div>
 
-          {/* Form */}
+          <p className="mb-6 text-sm text-center" style={{ color: 'var(--app-text-secondary)' }}>
+            Ingresa tu correo institucional y te enviaremos un código para restablecer tu contraseña.
+          </p>
+
+          {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="correo" className="block text-sm font-medium mb-2" style={{ color: 'var(--app-text-primary)' }}>
@@ -89,31 +105,7 @@ export default function Login() {
                     color: error ? 'var(--app-red)' : 'var(--app-text-primary)',
                   }}
                   placeholder="tu correo institucional"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--app-text-primary)' }}>
-                Contraseña
-              </label>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
-                  style={{ color: error ? 'var(--app-red)' : 'var(--app-text-secondary)' }}
-                />
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  style={{
-                    background: error ? 'rgba(239, 68, 68, 0.1)' : 'var(--app-hover)',
-                    border: `1px solid ${error ? 'var(--app-red)' : 'var(--app-border)'}`,
-                    color: error ? 'var(--app-red)' : 'var(--app-text-primary)',
-                  }}
-                  placeholder="••••••••"
+                  disabled={loading || !!success}
                 />
               </div>
             </div>
@@ -131,46 +123,28 @@ export default function Login() {
               </div>
             )}
 
+            {success && (
+              <div
+                className="px-4 py-3 rounded-lg text-sm text-center"
+                style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid var(--app-green)',
+                  color: 'var(--app-green)',
+                }}
+              >
+                {success}
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!success}
               className="w-full py-3 rounded-lg font-medium text-white transition-opacity disabled:opacity-50"
               style={{ background: 'var(--app-blue)' }}
             >
-              {loading ? 'Verificando credenciales...' : 'Continuar'}
+              {loading ? 'Enviando código...' : 'Enviar Código'}
             </button>
           </form>
-
-          <div
-            className="mt-5 px-4 py-3 rounded-lg text-xs text-center"
-            style={{
-              background: 'var(--app-blue-light)',
-              color: 'var(--app-blue)',
-              border: '1px solid var(--app-blue)',
-              opacity: 0.85,
-            }}
-          >
-            ! Recibirás un código de verificación en tu correo para completar el inicio de sesión.
-          </div>
-
-          {/* Forgot password */}
-          <div className="mt-5 text-center">
-            <p className="text-sm" style={{ color: 'var(--app-text-secondary)' }}>
-              <Link to="/forgot-password" className="font-medium hover:underline" style={{ color: 'var(--app-blue)' }}>
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </p>
-          </div>
-
-          {/* Register */}
-          <div className="mt-4 text-center">
-            <p className="text-sm" style={{ color: 'var(--app-text-secondary)' }}>
-              ¿No tienes cuenta?{' '}
-              <Link to="/register" className="font-medium hover:underline" style={{ color: 'var(--app-blue)' }}>
-                Regístrate aquí
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

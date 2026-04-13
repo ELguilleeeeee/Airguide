@@ -102,7 +102,7 @@ export default function EdificiosManagement() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-[var(--app-background)] p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -137,7 +137,7 @@ export default function EdificiosManagement() {
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg overflow-hidden">
+      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg overflow-x-auto">
         <table className="w-full">
           <thead className="bg-[var(--app-hover)] border-b border-[var(--app-border)]">
             <tr>

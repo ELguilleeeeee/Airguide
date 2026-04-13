@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router';
-import { MapPin, Navigation, Building2, Route as RouteIcon, X, LocateFixed } from 'lucide-react';
+import { MapPin, Navigation, Building2, Route as RouteIcon, X, LocateFixed, Eye } from 'lucide-react';
 import logoUTEQ from '../../styles/images/letras_uteq_azul2025.png';
 import { useEdificios, useEventos, useProfesores } from '../hooks';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SearchBar } from '../components/SearchBar';
@@ -12,12 +12,12 @@ import { toast } from 'sonner';
 const center = { lat: 20.656333, lng: -100.404745 };
 const containerStyle = { width: '100%', height: '100%' };
 
-// --- ICONOS PERSONALIZADOS ---
+// --- Iconos de Edificios ---
 const getIcon = (color: string, stroke: string) => {
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-      <path fill="${color}" stroke="${stroke}" stroke-width="2" d="M16 0C7.163 0 0 7.163 0 16c0 8.837 16 26 16 26s16-17.163 16-26C32 7.163 24.837 0 16 0z"/>
-      <circle cx="16" cy="16" r="6" fill="white"/>
+        <path fill="${color}" stroke="${stroke}" stroke-width="2" d="M16 0C7.163 0 0 7.163 0 16c0 8.837 16 26 16 26s16-17.163 16-26C32 7.163 24.837 0 16 0z"/>
+        <circle cx="16" cy="16" r="6" fill="white"/>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(svg);
 };
@@ -43,7 +43,6 @@ export default function Map() {
     const [routeDestination, setRouteDestination] = useState<number | null>(null);
     const [showRoutePanel, setShowRoutePanel] = useState(false);
     const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral | null>(null);
-    const [geojsonData, setGeojsonData] = useState<any>(null);
 
     const [directionsResponse, setDirectionsResponse] = useState<google.maps.DirectionsResult | null>(null);
     const [routeInfo, setRouteInfo] = useState<{ duration: string; distance: string } | null>(null);
@@ -52,6 +51,10 @@ export default function Map() {
         endLine: google.maps.LatLngLiteral[] | null;
     }>({ startLine: null, endLine: null });
     const [customRouteDetails, setCustomRouteDetails] = useState<google.maps.LatLngLiteral[] | null>(null);
+    const [isCongested, setIsCongested] = useState(false);
+
+    const [showHeatmap, setShowHeatmap] = useState(false);
+    const [heatmapRoutes, setHeatmapRoutes] = useState<Array<{ path: google.maps.LatLngLiteral[], score: number }>>([]);
 
     // LÓGICA DE GEOLOCALIZACIÓN
     useEffect(() => {
@@ -82,24 +85,27 @@ export default function Map() {
         setMap(null);
     }, []);
 
-    // DIBUJAR CAPA GEOJSON
-    useEffect(() => {
-        if (map && geojsonData) {
-            map.data.forEach((feature) => map.data.remove(feature));
-            map.data.addGeoJson(geojsonData);
-            map.data.setStyle((feature) => {
-                const type = feature.getProperty('type');
-                const isPath = type === 'path' || type === 'footway';
-                return {
-                    fillColor: isPath ? 'transparent' : '#3B82F6',
-                    fillOpacity: isPath ? 0 : 0.1,
-                    strokeColor: isPath ? '#94a3b8' : '#3B82F6',
-                    strokeWeight: isPath ? 2 : 1,
-                    clickable: false
-                };
-            });
+    const toggleHeatmap = async () => {
+        if (!showHeatmap) {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+                toast.info("Analizando datos de todas las rutas...", { duration: 3000 });
+                const res = await fetch(`${API_URL}/rutas/heatmap`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setHeatmapRoutes(data);
+                    setShowHeatmap(true);
+                } else {
+                    toast.error("Error al obtener capa térmica");
+                }
+            } catch {
+                toast.error("Error de conexion al Heatmap AI");
+            }
+        } else {
+            setShowHeatmap(false);
+            setHeatmapRoutes([]);
         }
-    }, [map, geojsonData]);
+    };
 
     // FILTROS
     const canViewProfesores = user && ['alumno', 'admin', 'rector'].includes(user.rol);
@@ -166,17 +172,42 @@ export default function Map() {
                     if (data && data.detalles && data.detalles.length > 0) {
                         customPath = data.detalles.map((d: any) => ({ lat: Number(d.latitud), lng: Number(d.longitud) }));
                         setCustomRouteDetails(customPath);
+
+                        try {
+                            const aiRes = await fetch(`${API_URL}/rutas/check-congestion`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id_ruta: data.id_ruta })
+                            });
+                            if (aiRes.ok) {
+                                const aiData = await aiRes.json();
+
+                                if (aiData.congested) {
+                                    toast.error(`Alto Flujo Detectado (Riesgo ${(aiData.score * 100).toFixed(0)}%). Sugerimos tomar vías alternas si tiene prisa.`, { duration: 8000 });
+                                    setIsCongested(true);
+                                } else {
+                                    setIsCongested(false);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error al verificar congestión', e);
+                        }
+
                     } else {
                         setCustomRouteDetails(null);
+                        setIsCongested(false);
                     }
                 } else {
                     setCustomRouteDetails(null);
+                    setIsCongested(false);
                 }
             } catch (err) {
                 setCustomRouteDetails(null);
+                setIsCongested(false);
             }
         } else {
             setCustomRouteDetails(null);
+            setIsCongested(false);
         }
 
         if (!window.google) return;
@@ -192,11 +223,9 @@ export default function Map() {
             const distToDest = Math.pow(customPath[customPath.length - 1].lat - destinationCoords.lat, 2) + Math.pow(customPath[customPath.length - 1].lng - destinationCoords.lng, 2);
 
             if (distToOrigin < distToDest) {
-                // El custom path está al origen (Ej. Sales de PIDET)
                 isCustomPathAtOrigin = true;
                 googleOrigin = customPath[customPath.length - 1]; // Iniciar en el final de nuestro tramo manual hacia afuera
             } else {
-                // El custom path está al destino (Ej. Vas hacia PIDET)
                 googleDestination = customPath[0]; // Terminar en el inicio de nuestro tramo manual interno
             }
         }
@@ -237,9 +266,12 @@ export default function Map() {
         setDirectionsResponse(null);
         setAutoStitchLines({ startLine: null, endLine: null });
         setCustomRouteDetails(null);
+        setIsCongested(false);
         setRouteInfo(null);
         setRouteOrigin(null);
         setRouteDestination(null);
+        setShowHeatmap(false);
+        setHeatmapRoutes([]);
     };
 
     if (loadError) return <div className="h-screen flex items-center justify-center">Error cargando Google Maps</div>;
@@ -261,7 +293,7 @@ export default function Map() {
                     {user?.rol === "admin" ? (
                         <div className="flex items-center gap-4 px-3 py-2 bg-[var(--app-hover)] rounded-lg">
                             <span className="text-sm text-[var(--app-text-primary)]">{user.nombre}</span>
-                            <button onClick={() => { navigate('/dashboard'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Dashboard</button>
+                            <button onClick={() => { navigate('/admin'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Dashboard</button>
                             <button onClick={() => { logout(); navigate('/login'); }} className="bg-[var(--app-blue)] text-white px-3 py-1 rounded-lg text-sm">Cerrar Sesión</button>
                         </div>
                     ) : (
@@ -379,12 +411,30 @@ export default function Map() {
                             <Polyline
                                 path={customRouteDetails}
                                 options={{
-                                    strokeColor: '#9333EA', // Purple to distinguish custom precise paths
-                                    strokeOpacity: 0.9,
+                                    strokeColor: isCongested ? '#EF4444' : '#9333EA', // Red if Congested, Purple otherwise
                                     strokeWeight: 6,
                                 }}
                             />
                         )}
+
+                        {/* GLOBAL AI HEATMAP */}
+                        {showHeatmap && heatmapRoutes.map((h, i) => {
+                            if (!h.path || h.path.length === 0) return null;
+                            // Asignamos color basado en la puntuación ML: >0.7 Rojo, >0.4 Naranja, sino Verde translucido
+                            const color = h.score > 0.7 ? '#EF4444' : h.score > 0.4 ? '#F59E0B' : '#10B981';
+                            return (
+                                <Polyline
+                                    key={i}
+                                    path={h.path}
+                                    options={{
+                                        strokeColor: color,
+                                        strokeOpacity: h.score > 0.7 ? 0.9 : 0.5, // Resaltar más las rojas
+                                        strokeWeight: h.score > 0.7 ? 8 : 4,
+                                        zIndex: h.score > 0.7 ? 20 : 10
+                                    }}
+                                />
+                            );
+                        })}
                     </GoogleMap>
                 ) : (
                     <div className="h-full flex items-center justify-center">Cargando mapas...</div>
@@ -393,16 +443,14 @@ export default function Map() {
                 {/* BOTÓN GPS */}
                 <button
                     onClick={centerOnUser}
-                    className="absolute bottom-24 right-4 bg-white text-blue-600 p-3 rounded-full shadow-2xl z-[10] hover:bg-blue-100 transition-colors"
-                >
+                    className="absolute bottom-24 right-4 bg-white text-blue-600 p-3 rounded-full shadow-2xl z-[10] hover:bg-blue-100 transition-colors">
                     <LocateFixed className="w-6 h-6" />
                 </button>
 
                 {/* BOTÓN RUTAS */}
                 <button
                     onClick={() => setShowRoutePanel(!showRoutePanel)}
-                    className="absolute bottom-4 right-4 bg-[var(--app-blue)] text-white p-3 rounded-full shadow-xl z-[10] flex items-center gap-2"
-                >
+                    className="absolute bottom-4 right-4 bg-[var(--app-blue)] text-white p-3 rounded-full shadow-xl z-[10] flex items-center gap-2">
                     <RouteIcon className="w-5 h-5" />
                     {showRoutePanel && <span className="text-sm font-medium">Rutas</span>}
                 </button>
@@ -435,6 +483,12 @@ export default function Map() {
                                 <button onClick={calculateRoute} className="flex-1 bg-blue-600 text-white py-2 rounded font-bold">Calcular</button>
                                 <button onClick={clearRoute} className="p-2 bg-red-100 text-red-600 rounded"><X className="w-5 h-5" /></button>
                             </div>
+                            {user?.rol === 'admin' && (
+                                <button onClick={toggleHeatmap} className="w-full mt-2 bg-blue-600 text-white py-2 rounded flex items-center justify-center gap-2 font-bold shadow-md hover:bg-blue-700 transition-colors">
+                                    <Eye className="w-4 h-4" />
+                                    {showHeatmap ? 'Ocultar Heatmap AI' : 'Ver Heatmap Global'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -483,6 +537,9 @@ export default function Map() {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-600">
                             <div className="w-4 h-1 bg-[#9333EA]" /> Camino Alterno (Interno)
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <div className="w-4 h-1 bg-[#EF4444]" /> Zona Roja (Alto Flujo)
                         </div>
                         {routeInfo && (
                             <div className="mt-2 pt-2 border-t text-xs text-blue-600 font-semibold">

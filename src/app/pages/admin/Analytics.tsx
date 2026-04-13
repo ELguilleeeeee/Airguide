@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Building2, Calendar, TrendingUp, Activity, MapPin, Clock } from 'lucide-react';
+import { BarChart3, Users, Building2, Calendar, TrendingUp, Activity, MapPin, Cpu } from 'lucide-react';
 import { useAnalytics } from '../../hooks';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+import { toast } from 'sonner';
 
 export default function Analytics() {
   const {
@@ -21,6 +23,7 @@ export default function Analytics() {
   const [usuariosPorRol, setUsuariosPorRol] = useState<any[]>([]);
   const [rutasPopulares, setRutasPopulares] = useState<any[]>([]);
   const [loadingCharts, setLoadingCharts] = useState(true);
+  const [isTraining, setIsTraining] = useState(false);
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
 
@@ -48,6 +51,33 @@ export default function Analytics() {
       console.error('Error loading charts data:', error);
     } finally {
       setLoadingCharts(false);
+    }
+  };
+
+  const handleTrainAI = async () => {
+    setIsTraining(true);
+    toast.info("Entrenando Neurona...");
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/analytics/train-congestion`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Modelo entrenado (Loss: ${data.loss?.toFixed(4)})`);
+      } else {
+        const errorData = await res.json();
+        toast.error(`Error en el entrenamiento: ${errorData.error}`);
+      }
+    } catch (e) {
+      toast.error('Error en la conexión.');
+    } finally {
+      setIsTraining(false);
     }
   };
 
@@ -102,19 +132,20 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-[var(--app-text-primary)]">
-          Analytics y Reportes
-        </h2>
-        <p className="text-sm text-[var(--app-text-secondary)] mt-1">
-          Estadísticas y métricas del sistema AirGuide
-        </p>
+    <div className="min-h-screen bg-[var(--app-background)] p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--app-text-primary)]">
+            Analytics y Reportes
+          </h2>
+          <p className="text-sm text-[var(--app-text-secondary)] mt-1">
+            Estadísticas y métricas del sistema AirGuide
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3">
         {statsCards.map((stat, index) => (
           <div
             key={index}
@@ -142,7 +173,7 @@ export default function Analytics() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-3">
         {/* Edificios por Tipo */}
         <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -268,7 +299,7 @@ export default function Analytics() {
       </div>
 
       {/* Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-3">
         {/* Eventos Próximos */}
         <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -314,7 +345,7 @@ export default function Analytics() {
         </div>
 
         {/* Rutas Populares */}
-        <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6">
+        <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6 mb-3">
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="w-5 h-5 text-[var(--app-blue)]" />
             <h3 className="text-lg font-bold text-[var(--app-text-primary)]">
@@ -345,9 +376,6 @@ export default function Analytics() {
                       {ruta.usos} usos
                     </p>
                   </div>
-                  <div className="flex-shrink-0">
-                    <Activity className="w-4 h-4 text-[var(--app-blue)]" />
-                  </div>
                 </div>
               ))
             )}
@@ -356,7 +384,7 @@ export default function Analytics() {
       </div>
 
       {/* Additional Stats */}
-      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6">
+      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6 mb-3">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="w-5 h-5 text-[var(--app-blue)]" />
           <h3 className="text-lg font-bold text-[var(--app-text-primary)]">
@@ -391,22 +419,37 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Pending Users Alert */}
-      {dashboardStats && dashboardStats.usuarios.pendientes > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Usuarios Pendientes de Aprobación
-              </p>
-              <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                Hay {dashboardStats.usuarios.pendientes} usuarios esperando validación
-              </p>
-            </div>
-          </div>
+      {/* Entrenar Neurona */}
+      <div className="bg-[var(--app-card-bg)] border border-[var(--app-border)] rounded-lg p-6 mt-6 shadow-md border-l">
+        <div className="flex items-center gap-2 mb-2">
+          <Cpu className="w-6 h-6 text-[var(--app-blue)]" />
+          <h3 className="text-xl font-bold text-[var(--app-text-primary)]">
+            Modelo de predicción de flujo de alumnos
+          </h3>
         </div>
-      )}
+        <p className="text-sm text-[var(--app-text-secondary)] mb-4">
+          La central enruta los usos históricos y activa modelos TensorFlow para predecir aglomeraciones en los caminos dinámicos. Dispare un re-entrenamiento si percibe lentitud en el flujo de los alumnos u horarios irregulares.
+        </p>
+        <button
+          onClick={handleTrainAI}
+          disabled={isTraining}
+          className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-white transition-all ${isTraining ? 'bg-gray-500 cursor-not-allowed' : 'bg-[var(--app-blue)] hover:bg-[var(--app-blue-hover)] shadow-lg'
+            }`}
+        >
+          {isTraining ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Entrenando modelo...
+            </>
+          ) : (
+            <>
+              <Cpu className="w-5 h-5" />
+              Entrenar Neurona
+            </>
+          )}
+        </button>
+      </div>
+
     </div>
   );
 }

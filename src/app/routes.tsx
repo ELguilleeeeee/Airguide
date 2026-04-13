@@ -3,10 +3,14 @@ import { AdminLayout } from './components/AdminLayout';
 import Map from "./pages/Map";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import VerifyTwoFactor from "./pages/VerifyTwoFactor";
 import EdificiosManagement from "./pages/admin/EdificiosManagement";
 import EventsManagement from "./pages/admin/EventsManagement";
 import Analytics from "./pages/admin/Analytics";
+import ProfesoresManagement from './pages/admin/ProfesoresManagement';
+import CubiculosManagement from './pages/admin/CubiculosManagement';
 import SalonesManagement from "./pages/admin/SalonesManagement";
 import UsuariosManagement from "./pages/admin/UsuariosManagement";
 
@@ -24,7 +28,7 @@ const isAdmin = () => {
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
   if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (adminOnly && !isAdmin()) {
@@ -37,7 +41,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/login" replace />,
   },
   {
     path: "/login",
@@ -50,6 +54,14 @@ export const router = createBrowserRouter([
   {
     path: "/verify-2fa",
     element: <VerifyTwoFactor />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/map",
@@ -84,6 +96,14 @@ export const router = createBrowserRouter([
         element: <Analytics />,
       },
       {
+        path: "profesores",
+        element: <ProfesoresManagement />
+      },
+      {
+        path: "cubiculos",
+        element: <CubiculosManagement />
+      },
+      {
         path: "salones",
         element: <SalonesManagement />,
       },
@@ -95,6 +115,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/login" replace />,
   },
 ]);

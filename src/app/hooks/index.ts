@@ -21,3 +21,6 @@ export type { Salon } from './useSalones';
 
 export { useProfesores } from './useProfesores';
 export type { Profesor } from './useProfesores';
+
+export { useCubiculos } from './useCubiculos';
+export type { Cubiculo } from './useCubiculos';

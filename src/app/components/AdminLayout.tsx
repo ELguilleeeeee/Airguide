@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Route, Building2, Calendar, BarChart3, Map, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Route, Building2, Calendar, BarChart3, Map, LogOut, Menu, X, DoorOpen, Box } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { useState } from 'react';
 
@@ -18,7 +18,9 @@ export function AdminLayout() {
   const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/edificios', icon: Building2, label: 'Edificios' },
-    { path: '/admin/salones', icon: Route, label: 'Salones' },
+    { path: '/admin/salones', icon: DoorOpen, label: 'Salones' },
+    { path: '/admin/cubiculos', icon: Box, label: 'Cubículos' },
+    { path: '/admin/rutas', icon: Route, label: 'Rutas' },
     { path: '/admin/events', icon: Calendar, label: 'Eventos' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analíticas' },
     { path: '/map', icon: Map, label: 'Ver Mapa' }
