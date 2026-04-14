@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Calendar, Building2, Search, Brain } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Building2, Search, Brain, QrCode } from 'lucide-react';
 import { useEventos, useEdificios, useUsuarios } from '../../hooks';
+import { useAuth } from '../../context/AuthContext';
+import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -8,10 +10,14 @@ export default function EventsManagement() {
   const { eventos, loading, createEvento, updateEvento, deleteEvento, fetchEventos, trainNeuralNetwork } = useEventos();
   const { edificios } = useEdificios();
   const { usuarios, fetchUsuarios } = useUsuarios();
+  const { user } = useAuth();
+  const isStudent = user?.rol === 'alumno';
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showChartModal, setShowChartModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrEvento, setQrEvento] = useState<any>(null);
   const [training, setTraining] = useState(false);
   const [learningCurve, setLearningCurve] = useState<any[]>([]);
   const [editingEvento, setEditingEvento] = useState<any>(null);
@@ -34,6 +40,7 @@ export default function EventsManagement() {
     id_edificio: '',
     id_creador: '',
     prioridad_evento: 3,
+    total_invitados: 0,
     publico: true,
     activo: true
   });
@@ -70,7 +77,8 @@ export default function EventsManagement() {
       const payload: any = {
         ...formData,
         id_edificio: parseInt(formData.id_edificio),
-        prioridad_evento: parseInt(formData.prioridad_evento.toString())
+        prioridad_evento: parseInt(formData.prioridad_evento.toString()),
+        total_invitados: parseInt(formData.total_invitados.toString()) || 0
       };
       if (formData.id_creador) {
         payload.id_creador = parseInt(formData.id_creador);
@@ -112,6 +120,7 @@ export default function EventsManagement() {
       id_edificio: evento.id_edificio.toString(),
       id_creador: evento.id_creador ? evento.id_creador.toString() : '',
       prioridad_evento: evento.prioridad_evento || 3,
+      total_invitados: evento.total_invitados || 0,
       publico: evento.publico,
       activo: evento.activo
     });
@@ -146,6 +155,7 @@ export default function EventsManagement() {
       id_edificio: '',
       id_creador: '',
       prioridad_evento: 3,
+      total_invitados: 0,
       publico: true,
       activo: true
     });
@@ -193,13 +203,15 @@ export default function EventsManagement() {
             <Brain className={`w-4 h-4 text-purple-500 ${training ? 'animate-pulse' : ''}`} />
             {training ? 'Entrenando...' : 'Entrenar Neurona gestora de eventos'}
           </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--app-blue)] text-white rounded-lg hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo Evento
-          </button>
+          {!isStudent && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--app-blue)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Evento
+            </button>
+          )}
         </div>
       </div>
 
@@ -234,9 +246,11 @@ export default function EventsManagement() {
               <th className="px-6 py-3 text-left text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
-                Acciones
-              </th>
+              {!isStudent && (
+                <th className="px-6 py-3 text-right text-xs font-medium text-[var(--app-text-secondary)] uppercase tracking-wider">
+                  Acciones
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--app-border)]">
@@ -318,25 +332,39 @@ export default function EventsManagement() {
                         </span>
                       )}
                     </div>
+                    {evento.total_invitados && evento.total_invitados > 0 ? (
+                      <div className="text-xs text-[var(--app-text-secondary)] mt-1">
+                        {evento.asistentes_confirmados || 0} / {evento.total_invitados} confirmados
+                      </div>
+                    ) : null}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(evento)}
-                        className="p-2 text-[var(--app-blue)] hover:bg-[var(--app-hover)] rounded-lg transition-colors"
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(evento)}
-                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {!isStudent && (
+                    <td className="px-6 py-4 text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => { setQrEvento(evento); setShowQrModal(true); }}
+                          className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 rounded-lg transition-colors"
+                          title="Generar QR"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(evento)}
+                          className="p-2 text-[var(--app-blue)] hover:bg-[var(--app-hover)] rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(evento)}
+                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -433,6 +461,19 @@ export default function EventsManagement() {
                     className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--app-text-primary)] mb-1">
+                  Total de Invitados (0 = Sin límite / Opcional)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.total_invitados}
+                  onChange={(e) => setFormData({ ...formData, total_invitados: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 bg-[var(--app-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--app-blue)]"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -591,6 +632,37 @@ export default function EventsManagement() {
                   Eliminar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR Code */}
+      {showQrModal && qrEvento && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--app-card-bg)] rounded-lg shadow-xl max-w-sm w-full p-6 text-center">
+            <h3 className="text-lg font-bold text-[var(--app-text-primary)] mb-2">
+              QR de Asistencia
+            </h3>
+            <p className="text-sm text-[var(--app-text-secondary)] mb-6">
+              {qrEvento.nombre}
+            </p>
+            <div className="bg-white p-4 rounded-xl inline-block shadow-sm">
+              <QRCodeSVG 
+                value={`${window.location.origin}/eventos/${qrEvento.id_evento}/confirmar`}
+                size={200}
+                bgColor={"#ffffff"}
+                fgColor={"#000000"}
+                level={"H"}
+              />
+            </div>
+            <div className="mt-6">
+              <button
+                onClick={() => { setShowQrModal(false); setQrEvento(null); }}
+                className="px-4 py-2 bg-[var(--app-hover)] text-[var(--app-text-primary)] rounded-lg hover:bg-opacity-80 transition-all w-full"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

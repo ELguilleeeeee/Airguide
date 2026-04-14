@@ -20,7 +20,6 @@ export function AdminLayout() {
     { path: '/admin/edificios', icon: Building2, label: 'Edificios' },
     { path: '/admin/salones', icon: DoorOpen, label: 'Salones' },
     { path: '/admin/cubiculos', icon: Box, label: 'Cubículos' },
-    { path: '/admin/rutas', icon: Route, label: 'Rutas' },
     { path: '/admin/events', icon: Calendar, label: 'Eventos' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analíticas' },
     { path: '/map', icon: Map, label: 'Ver Mapa' }

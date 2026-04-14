@@ -13,6 +13,8 @@ export interface Evento {
   activo: boolean;
   id_creador?: number;
   prioridad_evento?: number;
+  total_invitados?: number;
+  asistentes_confirmados?: number;
   edificio?: {
     id_edificio: number;
     nombre: string;

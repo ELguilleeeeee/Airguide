@@ -13,6 +13,7 @@ import ProfesoresManagement from './pages/admin/ProfesoresManagement';
 import CubiculosManagement from './pages/admin/CubiculosManagement';
 import SalonesManagement from "./pages/admin/SalonesManagement";
 import UsuariosManagement from "./pages/admin/UsuariosManagement";
+import EventConfirmation from "./pages/EventConfirmation";
 
 
 const isAuthenticated = () => {
@@ -70,7 +71,10 @@ export const router = createBrowserRouter([
         <Map />
       </ProtectedRoute>),
   },
-
+  {
+    path: "/eventos/:id/confirmar",
+    element: <EventConfirmation />,
+  },
   {
     path: "/admin",
     element: (

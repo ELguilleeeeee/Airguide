@@ -15,6 +15,7 @@ import VerifyTwoFactor from './pages/VerifyTwoFactor';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CubiculosManagement from './pages/admin/CubiculosManagement';
+import EventConfirmation from './pages/EventConfirmation';
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ export const router = createBrowserRouter([
   {
     path: 'reset-password',
     Component: ResetPassword
+  },
+  {
+    path: "/eventos/:id/confirmar",
+    Component: EventConfirmation
   },
   // Rutas de administrador
   {
