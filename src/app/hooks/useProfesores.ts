@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API_URL = (function(){ const u = import.meta.env.VITE_API_URL; return u ? (u.startsWith('http') ? u : 'https://'+u) : 'https://airguidebackend-production.up.railway.app/api'; })();
+const API_URL = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
 
 export interface Profesor {
   id_profesor: number;
