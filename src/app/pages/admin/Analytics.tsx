@@ -58,7 +58,7 @@ export default function Analytics() {
     setIsTraining(true);
     toast.info("Entrenando Neurona...");
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/analytics/train-congestion`, {
         method: 'POST',

@@ -29,8 +29,8 @@
   ```bash
   DATABASE_URL="postgres://95f5f1214a82708148a9b43e39fa1e41e4060e963ee217d0c4174044af1541f9:sk_XYgJ7P5CcF3TPpb0XVgW0@pooled.db.prisma.io:5432/postgres?sslmode=require"
 
-  #URL DEVELOPMENT  http://localhost:3001/api || https://airguide-lac.vercel.app
-  API_URL="http://localhost:3001/api"
+  #URL DEVELOPMENT  https://airguidebackend-production.up.railway.app/api || https://airguide-lac.vercel.app
+  API_URL="https://airguidebackend-production.up.railway.app/api"
   API_KEY="AIzaSyBCORaDyk1go3cDfKQNSM9-CS8wv12GSJM"
   # Server
   NODE_ENV="development"
@@ -55,7 +55,7 @@
   #3. En la carpeta Airguide, crea otro archivo .env y pega este codigo:
   ---
   ```bash
-  VITE_API_URL=http://localhost:3001/api
+  VITE_API_URL=https://airguidebackend-production.up.railway.app/api
   ```
   #4. Ahora sí, en la terminal del servidor backend (Terminal 2), ejecuta el comando 
   ```bash 

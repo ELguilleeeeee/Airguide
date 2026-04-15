@@ -88,7 +88,7 @@ export default function Map() {
     const toggleHeatmap = async () => {
         if (!showHeatmap) {
             try {
-                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+                const API_URL = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
                 toast.info("Analizando datos de todas las rutas...", { duration: 3000 });
                 const res = await fetch(`${API_URL}/rutas/heatmap`);
                 if (res.ok) {
@@ -148,7 +148,7 @@ export default function Map() {
         const destinationCoords = { lat: Number(destB.latitud), lng: Number(destB.longitud) };
 
         // FETCH CUSTOM MANUAL ROUTE SEGMENT (IF ANY)
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
         const token = localStorage.getItem('token');
         let customPath: google.maps.LatLngLiteral[] | null = null;
         

@@ -13,7 +13,7 @@ export default function EventConfirmation() {
     setLoading(true);
     setError('');
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
       const response = await fetch(`${apiUrl}/eventos/${id}/confirmar-asistencia`, {
         method: 'POST'
       });
