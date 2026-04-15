@@ -26,7 +26,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://airguidebackend-production.up.railway.app/api';
+const API_URL = (function(){ const u = import.meta.env.VITE_API_URL; return u ? (u.startsWith('http') ? u : 'https://'+u) : 'https://airguidebackend-production.up.railway.app/api'; })();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
