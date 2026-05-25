@@ -5,7 +5,7 @@ export interface User {
   correo: string;
   nombre: string;
   matricula: string;
-  rol: 'admin' | 'alumno';
+  rol: 'admin' | 'alumno' | 'profesor' | 'rector';
   estado: 'pendiente' | 'activo' | 'rechazado';
 }
 

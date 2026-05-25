@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { AdminLayout } from './components/AdminLayout';
+import { ProtectedProfesorLayout } from './components/ProtectedProfesorLayout';
 import Map from "./pages/Map";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,6 +15,9 @@ import CubiculosManagement from './pages/admin/CubiculosManagement';
 import SalonesManagement from "./pages/admin/SalonesManagement";
 import UsuariosManagement from "./pages/admin/UsuariosManagement";
 import EventConfirmation from "./pages/EventConfirmation";
+import GestionProfesor from "./pages/profesor/GestionProfesor";
+import PerfilProfesor from "./pages/profesor/PerfilProfesor";
+import EventsManagementProfesor from "./pages/profesor/EventsManagementProfesor";
 
 
 const isAuthenticated = () => {
@@ -114,6 +118,28 @@ export const router = createBrowserRouter([
       {
         path: "usuarios",
         element: <UsuariosManagement />,
+      },
+    ],
+  },
+  {
+    path: "/profesor",
+    element: <ProtectedProfesorLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/profesor/gestion" replace />,
+      },
+      {
+        path: "gestion",
+        element: <GestionProfesor />,
+      },
+      {
+        path: "perfil",
+        element: <PerfilProfesor />,
+      },
+      {
+        path: "eventos",
+        element: <EventsManagementProfesor />,
       },
     ],
   },

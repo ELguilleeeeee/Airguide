@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { ProtectedMap } from './components/ProtectedMap';
 import { ProtectedAdminLayout } from './components/ProtectedAdminLayout';
+import { ProtectedProfesorLayout } from './components/ProtectedProfesorLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Map';
@@ -16,6 +17,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CubiculosManagement from './pages/admin/CubiculosManagement';
 import EventConfirmation from './pages/EventConfirmation';
+import GestionProfesor from './pages/profesor/GestionProfesor';
+import PerfilProfesor from './pages/profesor/PerfilProfesor';
+import EventsManagementProfesor from './pages/profesor/EventsManagementProfesor';
 
 export const router = createBrowserRouter([
   {
@@ -85,6 +89,28 @@ export const router = createBrowserRouter([
       {
         path: 'analytics',
         Component: Analytics,
+      },
+    ]
+  },
+  {
+    path: '/profesor',
+    Component: ProtectedProfesorLayout,
+    children: [
+      {
+        index: true,
+        Component: GestionProfesor,
+      },
+      {
+        path: 'gestion',
+        Component: GestionProfesor,
+      },
+      {
+        path: 'perfil',
+        Component: PerfilProfesor,
+      },
+      {
+        path: 'eventos',
+        Component: EventsManagementProfesor,
       },
     ]
   },

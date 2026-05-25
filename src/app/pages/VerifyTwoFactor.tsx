@@ -71,6 +71,8 @@ export default function VerifyTwoFactor() {
         const parsed = JSON.parse(stored);
         if (parsed.rol === 'admin') {
           navigate('/admin/analytics', { replace: true });
+        } else if (parsed.rol === 'profesor') {
+          navigate('/profesor/gestion', { replace: true });
         } else {
           navigate('/map', { replace: true });
         }
