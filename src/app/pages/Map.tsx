@@ -215,7 +215,7 @@ export default function Map() {
 
             {/* ================= HEADER ================= */}
 
-<header className="bg-[var(--app-header-bg)] border-b border-[var(--app-border)] px-4 py-3 flex items-center justify-between z-50">
+            <header className="bg-[var(--app-header-bg)] border-b border-[var(--app-border)] px-4 py-3 flex items-center justify-between z-50">
                 <div className="flex items-center gap-4">
 
                     <img
@@ -244,7 +244,7 @@ export default function Map() {
 
                         <button
                             onClick={() => navigate('/admin')}
-                            className="bg-[var(--app-blue)] text-white text-white px-4 py-2 rounded-2xl text-sm shadow-lg hover:scale-105 transition-all duration-300"
+                            className="bg-[var(--app-blue)] text-white px-4 py-2 rounded-2xl text-sm shadow-lg hover:scale-105 transition-all duration-300"
                         >
                             Dashboard
                         </button>
@@ -267,7 +267,7 @@ export default function Map() {
 
                         <button
                             onClick={() => navigate('/login')}
-className="bg-[var(--app-blue)] text-white px-4 py-2 rounded-2xl text-sm shadow-lg hover:scale-105 transition-all duration-300"                        >
+                            className="bg-[var(--app-blue)] text-white px-4 py-2 rounded-2xl text-sm shadow-lg hover:scale-105 transition-all duration-300"        >
                             Iniciar sesión
                         </button>
 
@@ -316,9 +316,13 @@ className="bg-[var(--app-blue)] text-white px-4 py-2 rounded-2xl text-sm shadow-
 
                 </div>
 
-                {/* MENU 3 PUNTOS */}
+                {/* MENU 3 PUNTOS CON TEXTO "MENU" */}
 
-                <div className="relative">
+                <div className="relative flex flex-col items-center">
+                    
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 select-none">
+                        Menu
+                    </span>
 
                     <button
                         onClick={() => setShowOptionsMenu(!showOptionsMenu)}
@@ -329,7 +333,7 @@ className="bg-[var(--app-blue)] text-white px-4 py-2 rounded-2xl text-sm shadow-
 
                     {showOptionsMenu && (
 
-                        <div className="absolute right-0 mt-3 w-64 bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden z-50">
+                        <div className="absolute right-0 mt-14 w-64 bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden z-50">
 
                             <button
                                 onClick={() => {
